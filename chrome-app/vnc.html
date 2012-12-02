@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<!-- 
+noVNC example: simple example using default UI
+Copyright (C) 2012 Joel Martin
+noVNC is licensed under the MPL 2.0 (see LICENSE.txt)
+This file is licensed under the 2-Clause BSD license (see LICENSE.txt).
+-->
+
+<head>
+<title>VNC</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.9.2.custom.min.css">
+<script src="lib/jquery-1.8.3.min.js"></script>
+<script src="lib/jquery-ui-1.9.2.custom.min.js"></script>
+<script src="lib/webutil.js"></script>
+<script src="lib/util.js"></script>
+<script src="lib/base64.js"></script>
+<script src="lib/websock.js"></script>
+<script src="lib/des.js"></script>
+<script src="lib/input.js"></script>
+<script src="lib/display.js"></script>
+<script src="lib/jsunzip.js"></script>
+<script src="lib/rfb.js"></script>
+<script src="lib/tcp-client.js"></script>
+<script src="vnc.js"></script>
+</head>
+
+<body>
+<canvas id="vnc_canvas" width="640px" height="20px">
+Canvas not supported.
+</canvas>
+
+<form id="hostDialog">
+<input id="host" placeholder="Host" autofocus>
+<input id="port" type="number" placeholder="Port">
+</form>
+ 
+<form id="pwdDialog">
+<input id="password" type="password">
+</form>
+
+</body>
+</html>

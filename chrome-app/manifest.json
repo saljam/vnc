@@ -1,0 +1,16 @@
+{
+  "name": "VNC",
+  "version": "1.0",
+  "manifest_version": 2,
+  "description": "VNC client.",
+  "app": {
+    "background": {
+      "scripts": ["launch.js"]
+    }
+  },
+  "permissions": [
+    {"socket": [
+      "tcp-connect"
+    ]}
+  ]
+}

@@ -1,0 +1,3 @@
+This is a VNC client Chrome app. It's still a work in progress.
+
+This project uses NoVNC for the RFB rendering, and jQuery for the UI.

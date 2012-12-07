@@ -1,14 +1,18 @@
 var rfb;
 
 function updateState(rfb, state, oldstate, msg) {
-	var level;
 	switch (state) {
-		case 'failed':       level = "error";  break;
-		case 'fatal':        level = "error";  break;
-		case 'normal':       level = "normal"; break;
-		case 'disconnected': level = "normal"; break;
-		case 'loaded':       level = "normal"; break;
-		default:             level = "warn";   break;
+	case 'failed':
+	case 'fatal':
+		$("#form-connect").slideDown();
+		$('<div class="alert">' +
+			'<button type="button" class="close" data-dismiss="alert">&#215;</button>' + 
+ 			'<strong>Oops!</strong> ' + msg + '</div>').prependTo("#form-connect");
+		break;
+	case 'normal':
+	case 'disconnected':
+	case 'loaded':
+	default:
 	}
 }
 
@@ -17,7 +21,7 @@ function dial(host, port) {
 
 	document.title = host;
 
-	password = "";
+	pwd = "";
 
 	rfb = new RFB({
 		'target': $D('screen'),
@@ -28,14 +32,17 @@ function dial(host, port) {
 		'shared': true,
 		'view_only': false,
 		'updateState': updateState,
-		'onPasswordRequired': null
+		'onPasswordRequired': function() {
+			$("#form-pwd").slideDown();
+		}
 	});
-	rfb.connect(host, port, password, '');
+	rfb.connect(host, port, pwd, '');
 }
 
 $(function () {
 	$("#form-pwd").hide().submit(function(){
 		rfb.sendPassword(password.value);
+		$("#form-pwd").slideUp();
 		$("#form-pwd")[0].reset();
 	});
 	$("#form-connect").submit(function() {

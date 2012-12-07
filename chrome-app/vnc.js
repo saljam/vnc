@@ -1,13 +1,4 @@
-/*jslint white: false */
-/*global window, $, RFB, */
-"use strict";
-
 var rfb;
-
-function setPassword() {
-	rfb.sendPassword($D('password_input').value);
-	return false;
-}
 
 function updateState(rfb, state, oldstate, msg) {
 	var level;
@@ -26,43 +17,36 @@ function dial(host, port) {
 
 	document.title = host;
 
-	password = '';
+	password = "";
 
-	rfb = new RFB({'target': $D('vnc_canvas'),
+	rfb = new RFB({
+		'target': $D('screen'),
 		'encrypt': false,
 		'repeaterID': '',
 		'true_color': true,
 		'local_cursor': true,
 		'shared': true,
 		'view_only': false,
-		'updateState':  updateState,
-		'onPasswordRequired':  null});
+		'updateState': updateState,
+		'onPasswordRequired': null
+	});
 	rfb.connect(host, port, password, '');
 }
 
 $(function () {
-	$("#hostDialog").dialog({ autoOpen: true, title: "VNC",
-		modal: true, resizable: false,
-		closeOnEscape: false,
-		open: function(event, ui) {
-			$(".ui-dialog-titlebar-close").hide();
-		},
-		buttons: [ { text: "Connect", click: function() {
-			$(this).dialog("close");
-			dial(host.value, port.value);
-		}}],
+	$("#form-pwd").hide().submit(function(){
+		rfb.sendPassword(password.value);
+		$("#form-pwd")[0].reset();
 	});
-	
-	$("#pwdDialog").dialog({ autoOpen: false, title: "VNC Password",
-		modal: true, resizable: false,
-		closeOnEscape: false,
-		open: function(event, ui) {
-			$(".ui-dialog-titlebar-close").hide();
-		},
-		buttons: [ { text: "Login", click: function() {
-			$(this).dialog("close");
-			setPassword(password.value);
-			password.value = "";
-		}}],
+	$("#form-connect").submit(function() {
+		$(this).slideUp();
+		chrome.storage.local.set({"last_conn": {
+			"host": host.value,
+			"port": port.value }});
+		dial(host.value, port.value);
+	});
+	chrome.storage.local.get("last_conn", function(data) {
+		host.value = data.last_conn.host;
+		port.value = data.last_conn.port;
 	});
 });

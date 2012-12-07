@@ -9,8 +9,7 @@
     }
   },
   "permissions": [
-    {"socket": [
-      "tcp-connect"
-    ]}
+    {"socket": [ "tcp-connect" ]},
+    "storage"
   ]
 }

@@ -215,7 +215,7 @@ function constructor() {
                             'onMouseButton': mouseButton,
                             'onMouseMove': mouseMove});
 
-	ws = new VNC.websock({
+	ws = new VNC.socket({
 		message: handle_message,
 		open: function() {
 			if (rfb_state === "connect") {

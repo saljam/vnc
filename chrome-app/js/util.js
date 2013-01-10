@@ -33,44 +33,6 @@ Array.prototype.push32 = function (num) {
               (num      ) & 0xFF  );
 };
 
-// IE does not support map (even in IE9)
-//This prototype is provided by the Mozilla foundation and
-//is distributed under the MIT license.
-//http://www.ibiblio.org/pub/Linux/LICENSES/mit.license
-if (!Array.prototype.map)
-{
-  Array.prototype.map = function(fun /*, thisp*/)
-  {
-    var len = this.length;
-    if (typeof fun != "function")
-      throw new TypeError();
-
-    var res = new Array(len);
-    var thisp = arguments[1];
-    for (var i = 0; i < len; i++)
-    {
-      if (i in this)
-        res[i] = fun.call(thisp, this[i], i, this);
-    }
-
-    return res;
-  };
-}
-
-// 
-// requestAnimationFrame shim with setTimeout fallback
-//
-
-window.requestAnimFrame = (function(){
-    return  window.requestAnimationFrame       || 
-            window.webkitRequestAnimationFrame || 
-            window.mozRequestAnimationFrame    || 
-            window.oRequestAnimationFrame      || 
-            window.msRequestAnimationFrame     || 
-            function(callback){
-                window.setTimeout(callback, 1000 / 60);
-            };
-})();
 
 /* 
  * ------------------------------------------------------
@@ -120,7 +82,6 @@ Util.get_logging = function () {
 };
 // Initialize logging level
 Util.init_logging();
-
 
 // Set configuration default for Crockford style function namespaces
 Util.conf_default = function(cfg, api, defaults, v, mode, type, defval, desc) {
@@ -189,7 +150,6 @@ Util.conf_default = function(cfg, api, defaults, v, mode, type, defval, desc) {
         defval = [];
     }
     // Coerce existing setting to the right type
-    //Util.Debug("v: " + v + ", defval: " + defval + ", defaults[v]: " + defaults[v]);
     setter(defval);
 };
 
@@ -202,69 +162,9 @@ Util.conf_defaults = function(cfg, api, defaults, arr) {
     }
 };
 
-
 /*
  * Cross-browser routines
  */
-
-
-// Dynamically load scripts without using document.write()
-// Reference: http://unixpapa.com/js/dyna.html
-//
-// Handles the case where load_scripts is invoked from a script that
-// itself is loaded via load_scripts. Once all scripts are loaded the
-// window.onscriptsloaded handler is called (if set).
-Util.get_include_uri = function() {
-    return (typeof INCLUDE_URI !== "undefined") ? INCLUDE_URI : "include/";
-}
-Util._loading_scripts = [];
-Util._pending_scripts = [];
-Util.load_scripts = function(files) {
-    var head = document.getElementsByTagName('head')[0], script,
-        ls = Util._loading_scripts, ps = Util._pending_scripts;
-    for (var f=0; f<files.length; f++) {
-        script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = Util.get_include_uri() + files[f];
-        //console.log("loading script: " + script.src);
-        script.onload = script.onreadystatechange = function (e) {
-            while (ls.length > 0 && (ls[0].readyState === 'loaded' ||
-                                     ls[0].readyState === 'complete')) {
-                // For IE, append the script to trigger execution
-                var s = ls.shift();
-                //console.log("loaded script: " + s.src);
-                head.appendChild(s);
-            }
-            if (!this.readyState ||
-                (Util.Engine.presto && this.readyState === 'loaded') ||
-                this.readyState === 'complete') {
-                if (ps.indexOf(this) >= 0) {
-                    this.onload = this.onreadystatechange = null;
-                    //console.log("completed script: " + this.src);
-                    ps.splice(ps.indexOf(this), 1);
-
-                    // Call window.onscriptsload after last script loads
-                    if (ps.length === 0 && window.onscriptsload) {
-                        window.onscriptsload();
-                    }
-                }
-            }
-        };
-        // In-order script execution tricks
-        if (Util.Engine.trident) {
-            // For IE wait until readyState is 'loaded' before
-            // appending it which will trigger execution
-            // http://wiki.whatwg.org/wiki/Dynamic_Script_Execution_Order
-            ls.push(script);
-        } else {
-            // For webkit and firefox set async=false and append now
-            // https://developer.mozilla.org/en-US/docs/HTML/Element/script
-            script.async = false;
-            head.appendChild(script);
-        }
-        ps.push(script);
-    }
-}
 
 // Get DOM element position on page
 Util.getPosition = function (obj) {
@@ -300,7 +200,6 @@ Util.getEventPosition = function (e, obj, scale) {
     }
     return {'x': (docX - pos.x) / scale, 'y': (docY - pos.y) / scale};
 };
-
 
 // Event registration. Based on: http://www.scottandrew.com/weblog/articles/cbs-events
 Util.addEvent = function (obj, evType, fn){
@@ -340,17 +239,14 @@ Util.stopEvent = function(e) {
 Util.Features = {xpath: !!(document.evaluate), air: !!(window.runtime), query: !!(document.querySelector)};
 
 Util.Engine = {
-    // Version detection break in Opera 11.60 (errors on arguments.callee.caller reference)
-    //'presto': (function() {
-    //         return (!window.opera) ? false : ((arguments.callee.caller) ? 960 : ((document.getElementsByClassName) ? 950 : 925)); }()),
     'presto': (function() { return (!window.opera) ? false : true; }()),
 
     'trident': (function() {
             return (!window.ActiveXObject) ? false : ((window.XMLHttpRequest) ? ((document.querySelectorAll) ? 6 : 5) : 4); }()),
+            
     'webkit': (function() {
             try { return (navigator.taintEnabled) ? false : ((Util.Features.xpath) ? ((Util.Features.query) ? 525 : 420) : 419); } catch (e) { return false; } }()),
-    //'webkit': (function() {
-    //        return ((typeof navigator.taintEnabled !== "unknown") && navigator.taintEnabled) ? false : ((Util.Features.xpath) ? ((Util.Features.query) ? 525 : 420) : 419); }()),
+            
     'gecko': (function() {
             return (!document.getBoxObjectFor && window.mozInnerScreenX == null) ? false : ((document.getElementsByClassName) ? 19 : 18); }())
 };
@@ -362,18 +258,3 @@ if (Util.Engine.webkit) {
             return parseFloat(v, 10);
         })(Util.Engine.webkit);
 }
-
-Util.Flash = (function(){
-    var v, version;
-    try {
-        v = navigator.plugins['Shockwave Flash'].description;
-    } catch(err1) {
-        try {
-            v = new ActiveXObject('ShockwaveFlash.ShockwaveFlash').GetVariable('$version');
-        } catch(err2) {
-            v = '0 r0';
-        }
-    }
-    version = v.match(/\d+/g);
-    return {version: parseInt(version[0] || 0 + '.' + version[1], 10) || 0, build: parseInt(version[2], 10) || 0};
-}()); 

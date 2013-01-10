@@ -629,7 +629,7 @@ scan_renderQ = function() {
         }
     }
     if (renderQ.length > 0) {
-        requestAnimFrame(scan_renderQ);
+        requestAnimationFrame(scan_renderQ);
     }
 };
 

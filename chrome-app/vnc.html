@@ -14,28 +14,31 @@
 	<input id="host" class="span9 input-block-level" type="text" placeholder="Hostname" autofocus>
 	<input id="port" class="span3 input-block-level" type="number" placeholder="Port">
 	</div>
-	<button class="btn btn-large btn-primary">Connect</button>
+	<button class="btn btn-primary">Connect</button>
 </form>
  
 <form id="form-pwd">
 	<h2 class="form-heading">Password needed</h2>
-	<input id="password" type="password" placeholder="Password">
-	<button class="btn btn-primary">Go!</button>
+	<input id="password" class="input-block-level" type="password" placeholder="Password">
+	<button class="btn">Go!</button>
 </form>
 
 <canvas id="screen" width="640px" height="480px">
 Oops! Canvas not supported. Hang on, isn't this a Chrome App?!
 </canvas>
 
-<script src="js/jquery.js"></script>
-<script src="js/bootstrap.min.js"></script>
 <script src="js/util.js"></script>
 <script src="js/base64.js"></script>
+
+<script src="js/tcp-client.js"></script>
 <script src="js/websock.js"></script>
+
+<script src="js/jsunzip.js"></script>
 <script src="js/des.js"></script>
 <script src="js/input.js"></script>
 <script src="js/display.js"></script>
-<script src="js/jsunzip.js"></script>
 <script src="js/rfb.js"></script>
-<script src="js/tcp-client.js"></script>
+
+<script src="js/jquery.js"></script>
+<script src="js/bootstrap.min.js"></script>
 <script src="vnc.js"></script>

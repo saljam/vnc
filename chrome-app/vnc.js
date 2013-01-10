@@ -25,7 +25,7 @@ $(function () {
 		pwd = "";
 
 		rfb = new RFB({
-			'target': $D('screen'),
+			'target': $('#screen')[0],
 			'encrypt': false,
 			'repeaterID': '',
 			'true_color': true,

@@ -22,10 +22,10 @@ var that           = {},  // Public API methods
     // Pre-declare private functions used before definitions (jslint)
     init_vars, updateState, fail, handle_message,
     init_msg, normal_msg, framebufferUpdate, print_stats,
-
+    
     pixelFormat, clientEncodings, fbUpdateRequest, fbUpdateRequests,
     keyEvent, pointerEvent, clientCutText,
-
+    
     getTightCLength, extract_data_uri,
     keyPress, mouseButton, mouseMove,
 
@@ -44,7 +44,6 @@ var that           = {},  // Public API methods
     rfb_version    = 0,
     rfb_max_version= 3.8,
     rfb_auth_scheme= '',
-
 
     // In preference order
     encodings      = [
@@ -187,15 +186,6 @@ that.set_local_cursor = function(cursor) {
     }
 };
 
-// These are fake configuration getters
-that.get_display = function() { return display; };
-
-that.get_keyboard = function() { return keyboard; };
-
-that.get_mouse = function() { return mouse; };
-
-
-
 //
 // Setup routines
 //
@@ -203,7 +193,7 @@ that.get_mouse = function() { return mouse; };
 // Create the public API interface and initialize values that stay
 // constant across connect/disconnect
 function constructor() {
-    var i, rmode;
+    var i;
     Util.Debug(">> RFB.constructor");
 
     // Create lookup tables based encoding number
@@ -225,67 +215,48 @@ function constructor() {
                             'onMouseButton': mouseButton,
                             'onMouseMove': mouseMove});
 
-    rmode = display.get_render_mode();
+	ws = new VNC.websock({
+		message: handle_message,
+		open: function() {
+			if (rfb_state === "connect") {
+				updateState('ProtocolVersion', "Starting VNC handshake");
+			} else {
+				fail("Got unexpected WebSockets connection");
+			}
+		},
+		close: function(e) {
+			Util.Warn("WebSocket on-close event");
+			var msg = "";
+			if (e.code) {
+				msg = " (code: " + e.code;
+				if (e.reason) {
+					msg += ", reason: " + e.reason;
+				}
+				msg += ")";
+			}
+			if (rfb_state === 'disconnect') {
+				updateState('disconnected', 'VNC disconnected' + msg);
+			} else if (rfb_state === 'ProtocolVersion') {
+				fail('Failed to connect to server' + msg);
+			} else if (rfb_state in {'failed':1, 'disconnected':1}) {
+				Util.Error("Received onclose while disconnected" + msg);
+			} else  {
+				fail('Server disconnected' + msg);
+			}
+		},
+		error: function(e) {
+			Util.Warn("WebSocket on-error event");
+		}
+	});
 
-    ws = new Websock();
-    ws.on('message', handle_message);
-    ws.on('open', function() {
-        if (rfb_state === "connect") {
-            updateState('ProtocolVersion', "Starting VNC handshake");
-        } else {
-            fail("Got unexpected WebSockets connection");
-        }
-    });
-    ws.on('close', function(e) {
-        Util.Warn("WebSocket on-close event");
-        var msg = "";
-        if (e.code) {
-            msg = " (code: " + e.code;
-            if (e.reason) {
-                msg += ", reason: " + e.reason;
-            }
-            msg += ")";
-        }
-        if (rfb_state === 'disconnect') {
-            updateState('disconnected', 'VNC disconnected' + msg);
-        } else if (rfb_state === 'ProtocolVersion') {
-            fail('Failed to connect to server' + msg);
-        } else if (rfb_state in {'failed':1, 'disconnected':1}) {
-            Util.Error("Received onclose while disconnected" + msg);
-        } else  {
-            fail('Server disconnected' + msg);
-        }
-    });
-    ws.on('error', function(e) {
-        Util.Warn("WebSocket on-error event");
-        //fail("WebSock reported an error");
-    });
+    updateState('loaded', 'noVNC ready');
 
-
-    init_vars();
-
-    Util.Info("Using native WebSockets");
-    updateState('loaded', 'noVNC ready: native WebSockets, ' + rmode);
-
-    Util.Debug("<< RFB.constructor");
     return that;  // Return the public API interface
-}
-
-function connect() {
-    Util.Debug(">> RFB.connect");
-    
-    Util.Info("connecting to " + rfb_host);
-    ws.connect(rfb_host, rfb_port);
-
-    Util.Debug("<< RFB.connect");
 }
 
 // Initialize variables that are reset before each connection
 init_vars = function() {
     var i;
-
-    /* Reset state */
-    ws.init();
 
     FBU.rects        = 0;
     FBU.subrects     = 0;  // RRE and HEXTILE
@@ -301,7 +272,6 @@ init_vars = function() {
     }
     
     for (i=0; i < 4; i++) {
-        //FBU.zlibs[i] = new InflateStream();
         FBU.zlibs[i] = new TINF();
         FBU.zlibs[i].init();
     }
@@ -402,8 +372,7 @@ updateState = function(state, statusMsg) {
         func = Util.Warn;
     }
 
-    cmsg = typeof(statusMsg) !== 'undefined' ? (" Msg: " + statusMsg) : "";
-    func("New state '" + state + "', was '" + oldstate + "'." + cmsg);
+    func('State: ' + state + (typeof(statusMsg) !== 'undefined' ? " Msg: " + statusMsg : ""));
 
     if ((oldstate === 'failed') && (state === 'disconnected')) {
         // Do disconnect action, but stay in failed state
@@ -432,7 +401,6 @@ updateState = function(state, statusMsg) {
 
         break;
 
-
     case 'connect':
         
         connTimer = setTimeout(function () {
@@ -440,7 +408,7 @@ updateState = function(state, statusMsg) {
             }, conf.connectTimeout * 1000);
 
         init_vars();
-        connect();
+		ws.connect(rfb_host, rfb_port);
 
         // WebSocket.onopen transitions to 'ProtocolVersion'
         break;
@@ -529,15 +497,6 @@ handle_message = function() {
         break;
     }
 };
-
-
-function genDES(password, challenge) {
-    var i, passwd = [];
-    for (i=0; i < password.length; i += 1) {
-        passwd.push(password.charCodeAt(i));
-    }
-    return (new DES(passwd)).encrypt(challenge);
-}
 
 function flushClient() {
     if (mouse_arr.length > 0) {
@@ -670,7 +629,7 @@ init_msg = function() {
             while (repeaterID.length < 250) {
                 repeaterID += "\0";
             }
-            ws.send_string(repeaterID);
+            ws.sendString(repeaterID);
             break;
         }
         if (rfb_version > rfb_max_version) { 
@@ -688,7 +647,7 @@ init_msg = function() {
 
         cversion = "00" + parseInt(rfb_version,10) +
                    ".00" + ((rfb_version * 10) % 10);
-        ws.send_string("RFB " + cversion + "\n");
+        ws.sendString("RFB " + cversion + "\n");
         updateState('Security', "Sent ProtocolVersion: " + cversion);
         break;
 
@@ -751,14 +710,10 @@ init_msg = function() {
                 }
                 if (ws.rQwait("auth challenge", 16)) { return false; }
                 challenge = ws.rQshiftBytes(16);
-                //Util.Debug("Password: " + rfb_password);
-                //Util.Debug("Challenge: " + challenge +
-                //           " (" + challenge.length + ")");
-                response = genDES(rfb_password, challenge);
-                //Util.Debug("Response: " + response +
-                //           " (" + response.length + ")");
                 
-                //Util.Debug("Sending DES encrypted auth response");
+                var pwd_arr = rfb_password.split('').map(function(c){return c.charCodeAt(0)});
+                response = DES.cipher(pwd_arr)(challenge);
+                
                 ws.send(response);
                 updateState('SecurityResult');
                 return;
@@ -1557,7 +1512,6 @@ encHandlers.last_rect = function last_rect() {
 };
 
 encHandlers.DesktopSize = function set_desktopsize() {
-    Util.Debug(">> set_desktopsize");
     fb_width = FBU.width;
     fb_height = FBU.height;
     conf.onFBResize(that, fb_width, fb_height);
@@ -1569,13 +1523,11 @@ encHandlers.DesktopSize = function set_desktopsize() {
     FBU.bytes = 0;
     FBU.rects -= 1;
 
-    Util.Debug("<< set_desktopsize");
     return true;
 };
 
 encHandlers.Cursor = function set_cursor() {
     var x, y, w, h, pixelslength, masklength;
-    Util.Debug(">> set_cursor");
     x = FBU.x;  // hotspot-x
     y = FBU.y;  // hotspot-y
     w = FBU.width;
@@ -1587,8 +1539,6 @@ encHandlers.Cursor = function set_cursor() {
     FBU.bytes = pixelslength + masklength;
     if (ws.rQwait("cursor encoding", FBU.bytes)) { return false; }
 
-    //Util.Debug("   set_cursor, x: " + x + ", y: " + y + ", w: " + w + ", h: " + h);
-
     display.changeCursor(ws.rQshiftBytes(pixelslength),
                             ws.rQshiftBytes(masklength),
                             x, y, w, h);
@@ -1596,7 +1546,6 @@ encHandlers.Cursor = function set_cursor() {
     FBU.bytes = 0;
     FBU.rects -= 1;
 
-    Util.Debug("<< set_cursor");
     return true;
 };
 
@@ -1818,22 +1767,6 @@ that.clipboardPasteFrom = function(text) {
     //Util.Debug("<< clipboardPasteFrom");
 };
 
-// Override internal functions for testing
-that.testMode = function(override_send, data_mode) {
-    test_mode = true;
-    that.recv_message = ws.testMode(override_send, data_mode);
-
-    checkEvents = function () { /* Stub Out */ };
-    that.connect = function(host, port, password) {
-            rfb_host = host;
-            rfb_port = port;
-            rfb_password = password;
-            init_vars();
-            updateState('ProtocolVersion', "Starting VNC handshake");
-        };
-};
-
-
 return constructor();  // Return the public API interface
 
-}  // End of RFB()
+}

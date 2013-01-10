@@ -19,7 +19,7 @@ Author: Boris Smus (smus@chromium.org)
 (function(exports) {
 
   // Define some local variables here.
-  var socket = chrome.socket || chrome.experimental.socket;
+  var socket = chrome.socket;
 
   /**
    * Creates an instance of the client
@@ -30,7 +30,7 @@ Author: Boris Smus (smus@chromium.org)
   function TcpClient(host, port, pollInterval) {
     this.host = host;
     this.port = port;
-    this.pollInterval = pollInterval || 15;
+    this.pollInterval = pollInterval || 10;
 
     // Callback functions.
     this.callbacks = {

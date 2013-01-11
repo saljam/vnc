@@ -1,15 +1,20 @@
 {
-  "name": "VNC",
-  "version": "1.0",
-  "manifest_version": 2,
-  "description": "VNC client.",
-  "app": {
-    "background": {
-      "scripts": ["launch.js"]
-    }
-  },
-  "permissions": [
-    {"socket": [ "tcp-connect" ]},
-    "storage"
-  ]
+	"name": "VNC Viewer",
+	"version": "1.0",
+	"manifest_version": 2,
+	"description": "A standalone VNC client.",
+	"app": {
+		"background": {
+			"scripts": ["launch.js"]
+		}
+	},
+	"icons": {
+		"128": "icon128.png",
+		"48": "icon48.png",
+		"16": "icon16.png"
+	},
+	"permissions": [
+		{"socket": [ "tcp-connect" ]},
+		"storage"
+	]
 }

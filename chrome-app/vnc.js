@@ -25,10 +25,11 @@ $(function () {
 		pwd = "";
 
 		rfb = VNC.rfb({
-			'target': $('#screen')[0],
-			'local_cursor': true,
-			'updateState': updateState,
-			'onPasswordRequired': function() {
+			target: $('#screen')[0],
+			local_cursor: true,
+			check_rate: 15,
+			updateState: updateState,
+			onPasswordRequired: function() {
 				$("#form-pwd").slideDown();
 			}
 		});

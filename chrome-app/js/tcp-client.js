@@ -45,7 +45,6 @@ Author: Boris Smus (smus@chromium.org)
     this.socketId = null;
     this.isConnected = false;
 
-    log('initialized tcp client');
   }
 
   /**

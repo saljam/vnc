@@ -78,9 +78,12 @@
 "use strict";
 /*jslint white: false, bitwise: false, plusplus: false */
 
-var DES = {};
+var VNC;
+if (VNC === undefined) {
+	VNC = {};
+}
 
-DES.cipher = function(passwd) {
+VNC.des = function(passwd) {
 
 	// Tables, permutations, S-boxes, etc.
 	var PC2 = [13,16,10,23, 0, 4, 2,27,14, 5,20, 9,22,18,11, 3,

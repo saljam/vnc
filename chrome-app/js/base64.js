@@ -7,16 +7,34 @@
 /*jslint white: false, bitwise: false, plusplus: false */
 /*global console */
 
-var Base64 = {
+var VNC;
+if (VNC === undefined) {
+	VNC = {};
+}
 
-/* Convert data (an array of integers) to a Base64 string. */
-toBase64Table : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split(''),
-base64Pad     : '=',
+VNC.base64 = function(){
 
-encode: function (data) {
-    "use strict";
+	/* Convert data (an array of integers) to a Base64 string. */
+	var toBase64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='.split(''),
+	
+	base64Pad = '=',
+
+	/* Convert Base64 data to a string */
+	toBinaryTable = [
+		-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+		-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
+		-1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,62, -1,-1,-1,63,
+		52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1, 0,-1,-1,
+		-1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
+		15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
+		-1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
+		41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
+	];
+	
+	return {
+		encode: function (data) {
+			"use strict";
     var result = '';
-    var toBase64Table = Base64.toBase64Table;
     var length = data.length
     var lengthpad = (length%3);
     var i = 0, j = 0;
@@ -48,23 +66,10 @@ encode: function (data) {
     return result;
 },
 
-/* Convert Base64 data to a string */
-toBinaryTable : [
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,-1,
-    -1,-1,-1,-1, -1,-1,-1,-1, -1,-1,-1,62, -1,-1,-1,63,
-    52,53,54,55, 56,57,58,59, 60,61,-1,-1, -1, 0,-1,-1,
-    -1, 0, 1, 2,  3, 4, 5, 6,  7, 8, 9,10, 11,12,13,14,
-    15,16,17,18, 19,20,21,22, 23,24,25,-1, -1,-1,-1,-1,
-    -1,26,27,28, 29,30,31,32, 33,34,35,36, 37,38,39,40,
-    41,42,43,44, 45,46,47,48, 49,50,51,-1, -1,-1,-1,-1
-],
 
 decode: function (data, offset) {
     "use strict";
     offset = typeof(offset) !== 'undefined' ? offset : 0;
-    var toBinaryTable = Base64.toBinaryTable;
-    var base64Pad = Base64.base64Pad;
     var result, result_length, idx, i, c, padding;
     var leftbits = 0; // number of bits decoded, but yet to be appended
     var leftdata = 0; // bits decoded, but yet to be appended
@@ -112,4 +117,5 @@ decode: function (data, offset) {
     return result;
 }
 
-}; /* End of Base64 namespace */
+};
+}()

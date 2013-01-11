@@ -764,7 +764,6 @@ function changeCursor(target, pixels, mask, hotx, hoty, w0, h0, cmap) {
         }
     }
 
-    url = "data:image/x-icon;base64," + Base64.encode(cur);
+    url = "data:image/x-icon;base64," + VNC.base64.encode(cur);
     target.style.cursor = "url(" + url + ") " + hotx + " " + hoty + ", default";
-    //Util.Debug("<< changeCursor, cur.length: " + cur.length);
 }

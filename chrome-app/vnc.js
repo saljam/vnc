@@ -24,14 +24,9 @@ $(function () {
 
 		pwd = "";
 
-		rfb = new RFB({
+		rfb = VNC.rfb({
 			'target': $('#screen')[0],
-			'encrypt': false,
-			'repeaterID': '',
-			'true_color': true,
 			'local_cursor': true,
-			'shared': true,
-			'view_only': false,
 			'updateState': updateState,
 			'onPasswordRequired': function() {
 				$("#form-pwd").slideDown();

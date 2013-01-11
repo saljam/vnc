@@ -8,12 +8,13 @@
  * TIGHT decoder portion:
  * (c) 2012 Michael Tinglof, Joe Balaz, Les Piech (Mercuri.ca)
  */
+ 
+var VNC;
+if (VNC === undefined) {
+	VNC = {};
+}
 
-/*jslint white: false, browser: true, bitwise: false, plusplus: false */
-/*global window, Util, Display, Keyboard, Mouse, Websock, Websock_native, Base64, DES */
-
-
-function RFB(defaults) {
+VNC.rfb = function(defaults) {
 "use strict";
 
 var that           = {},  // Public API methods
@@ -712,7 +713,7 @@ init_msg = function() {
                 challenge = ws.rQshiftBytes(16);
                 
                 var pwd_arr = rfb_password.split('').map(function(c){return c.charCodeAt(0)});
-                response = DES.cipher(pwd_arr)(challenge);
+                response = VNC.des(pwd_arr)(challenge);
                 
                 ws.send(response);
                 updateState('SecurityResult');
@@ -1487,7 +1488,6 @@ function display_tight(isTightPNG) {
 
     FBU.bytes = 0;
     FBU.rects -= 1;
-    //Util.Debug("   ending ws.rQslice(0,20): " + ws.rQslice(0,20) + " (" + ws.rQlen() + ")");
     //Util.Debug("<< display_tight_png");
     return true;
 }
@@ -1498,7 +1498,7 @@ extract_data_uri = function(arr) {
     //    stra.push(String.fromCharCode(arr[i]));
     //}
     //return "," + escape(stra.join(''));
-    return ";base64," + Base64.encode(arr);
+    return ";base64," + VNC.base64.encode(arr);
 };
 
 encHandlers.TIGHT = function () { return display_tight(false); };

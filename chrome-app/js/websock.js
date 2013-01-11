@@ -99,7 +99,7 @@ VNC.socket = function(eventHandlers) {
 	}
 
 	function encode_message() {
-		return (new Uint8Array(sQ)).buffer;
+		return ().buffer;
 	}
 
 	function decode_message(data) {
@@ -112,7 +112,7 @@ VNC.socket = function(eventHandlers) {
 
 	function flush() {
 		if (sQ.length > 0) {
-			sock.sendBuffer(encode_message(sQ));
+			sock.sendBuffer(new Uint8Array(sQ));
 			sQ = [];
 		}
 		return true;
@@ -123,7 +123,19 @@ VNC.socket = function(eventHandlers) {
 		return flush();
 	}
 
-	function sendString(str) {
+	var stringToArrayBuffer = function(str, callback) {
+		var bb = new Blob([str]);
+		var f = new FileReader();
+		f.onload = function(e) {
+			callback(e.target.result);
+		};
+		f.readAsArrayBuffer(bb);
+	};
+
+	var sendString = function(str) {
+		//stringToArrayBuffer(str, function(buf) {
+		//	send(buf);
+		//});
 		send(str.split('').map(function(c){return c.charCodeAt(0)}));
 	}
 

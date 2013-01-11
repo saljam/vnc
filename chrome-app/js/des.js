@@ -78,10 +78,7 @@
 "use strict";
 /*jslint white: false, bitwise: false, plusplus: false */
 
-var VNC;
-if (VNC === undefined) {
-	VNC = {};
-}
+var VNC = VNC || {};
 
 VNC.des = function(passwd) {
 

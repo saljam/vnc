@@ -7,10 +7,7 @@
 /*jslint white: false, bitwise: false, plusplus: false */
 /*global console */
 
-var VNC;
-if (VNC === undefined) {
-	VNC = {};
-}
+var VNC = VNC || {};
 
 VNC.base64 = function(){
 

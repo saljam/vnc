@@ -9,7 +9,9 @@
 /*jslint browser: true, white: false, bitwise: false */
 /*global Util, Base64, changeCursor */
 
-function Display(defaults) {
+var VNC = VNC || {};
+
+VNC.Display = function(defaults) {
 "use strict";
 
 var that           = {},  // Public API methods
@@ -651,13 +653,8 @@ that.defaultCursor = function() {
     conf.target.style.cursor = "default";
 };
 
-return constructor();  // Return the public API interface
-
-}  // End of Display()
-
-
 /* Set CSS cursor property using data URI encoded cursor file */
-function changeCursor(target, pixels, mask, hotx, hoty, w0, h0, cmap) {
+var changeCursor = function(target, pixels, mask, hotx, hoty, w0, h0, cmap) {
     "use strict";
     var cur = [], rgb, IHDRsz, RGBsz, ANDsz, XORsz, url, idx, alpha, x, y;
     //Util.Debug(">> changeCursor, x: " + hotx + ", y: " + hoty + ", w0: " + w0 + ", h0: " + h0);
@@ -767,3 +764,7 @@ function changeCursor(target, pixels, mask, hotx, hoty, w0, h0, cmap) {
     url = "data:image/x-icon;base64," + VNC.base64.encode(cur);
     target.style.cursor = "url(" + url + ") " + hotx + " " + hoty + ", default";
 }
+
+return constructor();  // Return the public API interface
+
+}  // End of Display()

@@ -4,15 +4,13 @@
  * Licensed under MPL 2.0 or any later version (see LICENSE.txt)
  */
 
-/*jslint browser: true, white: false, bitwise: false */
-/*global window, Util */
-
+var VNC = VNC || {};
 
 //
 // Keyboard event handler
 //
 
-function Keyboard(defaults) {
+VNC.Keyboard = function(defaults) {
 "use strict";
 
 var that           = {},  // Public API methods
@@ -469,191 +467,10 @@ that.ungrab = function() {
     //Util.Debug(">> Keyboard.ungrab");
 };
 
-return that;  // Return the public API interface
-
-}  // End of Keyboard()
-
-
-//
-// Mouse event handler
-//
-
-function Mouse(defaults) {
-"use strict";
-
-var that           = {},  // Public API methods
-    conf           = {};  // Configuration attributes
-
-// Configuration attributes
-Util.conf_defaults(conf, that, defaults, [
-    ['target',         'ro', 'dom',  document, 'DOM element that captures mouse input'],
-    ['focused',        'rw', 'bool', true, 'Capture and send mouse clicks/movement'],
-    ['scale',          'rw', 'float', 1.0, 'Viewport scale factor 0.0 - 1.0'],
-
-    ['onMouseButton',  'rw', 'func', null, 'Handler for mouse button click/release'],
-    ['onMouseMove',    'rw', 'func', null, 'Handler for mouse movement'],
-    ['touchButton',    'rw', 'int', 1, 'Button mask (1, 2, 4) for touch devices (0 means ignore clicks)']
-    ]);
-
-
-// 
-// Private functions
-//
-
-function onMouseButton(e, down) {
-    var evt, pos, bmask;
-    if (! conf.focused) {
-        return true;
-    }
-    evt = (e ? e : window.event);
-    pos = Util.getEventPosition(e, conf.target, conf.scale);
-    if (e.touches || e.changedTouches) {
-        // Touch device
-        bmask = conf.touchButton;
-        // If bmask is set
-    } else if (evt.which) {
-        /* everything except IE */
-        bmask = 1 << evt.button;
-    } else {
-        /* IE including 9 */
-        bmask = (evt.button & 0x1) +      // Left
-                (evt.button & 0x2) * 2 +  // Right
-                (evt.button & 0x4) / 2;   // Middle
-    }
-    //Util.Debug("mouse " + pos.x + "," + pos.y + " down: " + down +
-    //           " bmask: " + bmask + "(evt.button: " + evt.button + ")");
-    if (bmask > 0 && conf.onMouseButton) {
-        Util.Debug("onMouseButton " + (down ? "down" : "up") +
-                   ", x: " + pos.x + ", y: " + pos.y + ", bmask: " + bmask);
-        conf.onMouseButton(pos.x, pos.y, down, bmask);
-    }
-    Util.stopEvent(e);
-    return false;
-}
-
-function onMouseDown(e) {
-    onMouseButton(e, 1);
-}
-
-function onMouseUp(e) {
-    onMouseButton(e, 0);
-}
-
-function onMouseWheel(e) {
-    var evt, pos, bmask, wheelData;
-    if (! conf.focused) {
-        return true;
-    }
-    evt = (e ? e : window.event);
-    pos = Util.getEventPosition(e, conf.target, conf.scale);
-    wheelData = evt.detail ? evt.detail * -1 : evt.wheelDelta / 40;
-    if (wheelData > 0) {
-        bmask = 1 << 3;
-    } else {
-        bmask = 1 << 4;
-    }
-    //Util.Debug('mouse scroll by ' + wheelData + ':' + pos.x + "," + pos.y);
-    if (conf.onMouseButton) {
-        conf.onMouseButton(pos.x, pos.y, 1, bmask);
-        conf.onMouseButton(pos.x, pos.y, 0, bmask);
-    }
-    Util.stopEvent(e);
-    return false;
-}
-
-function onMouseMove(e) {
-    var evt, pos;
-    if (! conf.focused) {
-        return true;
-    }
-    evt = (e ? e : window.event);
-    pos = Util.getEventPosition(e, conf.target, conf.scale);
-    //Util.Debug('mouse ' + evt.which + '/' + evt.button + ' up:' + pos.x + "," + pos.y);
-    if (conf.onMouseMove) {
-        conf.onMouseMove(pos.x, pos.y);
-    }
-    Util.stopEvent(e);
-    return false;
-}
-
-function onMouseDisable(e) {
-    var evt, pos;
-    if (! conf.focused) {
-        return true;
-    }
-    evt = (e ? e : window.event);
-    pos = Util.getEventPosition(e, conf.target, conf.scale);
-    /* Stop propagation if inside canvas area */
-    if ((pos.x >= 0) && (pos.y >= 0) &&
-        (pos.x < conf.target.offsetWidth) &&
-        (pos.y < conf.target.offsetHeight)) {
-        //Util.Debug("mouse event disabled");
-        Util.stopEvent(e);
-        return false;
-    }
-    //Util.Debug("mouse event not disabled");
-    return true;
-}
-
-//
-// Public API interface functions
-//
-
-that.grab = function() {
-    //Util.Debug(">> Mouse.grab");
-    var c = conf.target;
-
-    if ('ontouchstart' in document.documentElement) {
-        Util.addEvent(c, 'touchstart', onMouseDown);
-        Util.addEvent(c, 'touchend', onMouseUp);
-        Util.addEvent(c, 'touchmove', onMouseMove);
-    } else {
-        Util.addEvent(c, 'mousedown', onMouseDown);
-        Util.addEvent(c, 'mouseup', onMouseUp);
-        Util.addEvent(c, 'mousemove', onMouseMove);
-        Util.addEvent(c, (Util.Engine.gecko) ? 'DOMMouseScroll' : 'mousewheel',
-                onMouseWheel);
-    }
-
-    /* Work around right and middle click browser behaviors */
-    Util.addEvent(document, 'click', onMouseDisable);
-    Util.addEvent(document.body, 'contextmenu', onMouseDisable);
-
-    //Util.Debug("<< Mouse.grab");
-};
-
-that.ungrab = function() {
-    //Util.Debug(">> Mouse.ungrab");
-    var c = conf.target;
-
-    if ('ontouchstart' in document.documentElement) {
-        Util.removeEvent(c, 'touchstart', onMouseDown);
-        Util.removeEvent(c, 'touchend', onMouseUp);
-        Util.removeEvent(c, 'touchmove', onMouseMove);
-    } else {
-        Util.removeEvent(c, 'mousedown', onMouseDown);
-        Util.removeEvent(c, 'mouseup', onMouseUp);
-        Util.removeEvent(c, 'mousemove', onMouseMove);
-        Util.removeEvent(c, (Util.Engine.gecko) ? 'DOMMouseScroll' : 'mousewheel',
-                onMouseWheel);
-    }
-
-    /* Work around right and middle click browser behaviors */
-    Util.removeEvent(document, 'click', onMouseDisable);
-    Util.removeEvent(document.body, 'contextmenu', onMouseDisable);
-
-    //Util.Debug(">> Mouse.ungrab");
-};
-
-return that;  // Return the public API interface
-
-}  // End of Mouse()
-
-
 /*
  * Browser keypress to X11 keysym for Unicode characters > U+00FF
  */
-unicodeTable = {
+var unicodeTable = {
     0x0104 : 0x01a1,
     0x02D8 : 0x01a2,
     0x0141 : 0x01a3,
@@ -1913,3 +1730,184 @@ unicodeTable = {
     0x28fe : 0x10028fe,
     0x28ff : 0x10028ff
 };
+
+return that;  // Return the public API interface
+
+}  // End of Keyboard()
+
+
+//
+// Mouse event handler
+//
+
+VNC.Mouse = function(defaults) {
+"use strict";
+
+var that           = {},  // Public API methods
+    conf           = {};  // Configuration attributes
+
+// Configuration attributes
+Util.conf_defaults(conf, that, defaults, [
+    ['target',         'ro', 'dom',  document, 'DOM element that captures mouse input'],
+    ['focused',        'rw', 'bool', true, 'Capture and send mouse clicks/movement'],
+    ['scale',          'rw', 'float', 1.0, 'Viewport scale factor 0.0 - 1.0'],
+
+    ['onMouseButton',  'rw', 'func', null, 'Handler for mouse button click/release'],
+    ['onMouseMove',    'rw', 'func', null, 'Handler for mouse movement'],
+    ['touchButton',    'rw', 'int', 1, 'Button mask (1, 2, 4) for touch devices (0 means ignore clicks)']
+    ]);
+
+
+// 
+// Private functions
+//
+
+function onMouseButton(e, down) {
+    var evt, pos, bmask;
+    if (! conf.focused) {
+        return true;
+    }
+    evt = (e ? e : window.event);
+    pos = Util.getEventPosition(e, conf.target, conf.scale);
+    if (e.touches || e.changedTouches) {
+        // Touch device
+        bmask = conf.touchButton;
+        // If bmask is set
+    } else if (evt.which) {
+        /* everything except IE */
+        bmask = 1 << evt.button;
+    } else {
+        /* IE including 9 */
+        bmask = (evt.button & 0x1) +      // Left
+                (evt.button & 0x2) * 2 +  // Right
+                (evt.button & 0x4) / 2;   // Middle
+    }
+    //Util.Debug("mouse " + pos.x + "," + pos.y + " down: " + down +
+    //           " bmask: " + bmask + "(evt.button: " + evt.button + ")");
+    if (bmask > 0 && conf.onMouseButton) {
+        Util.Debug("onMouseButton " + (down ? "down" : "up") +
+                   ", x: " + pos.x + ", y: " + pos.y + ", bmask: " + bmask);
+        conf.onMouseButton(pos.x, pos.y, down, bmask);
+    }
+    Util.stopEvent(e);
+    return false;
+}
+
+function onMouseDown(e) {
+    onMouseButton(e, 1);
+}
+
+function onMouseUp(e) {
+    onMouseButton(e, 0);
+}
+
+function onMouseWheel(e) {
+    var evt, pos, bmask, wheelData;
+    if (! conf.focused) {
+        return true;
+    }
+    evt = (e ? e : window.event);
+    pos = Util.getEventPosition(e, conf.target, conf.scale);
+    wheelData = evt.detail ? evt.detail * -1 : evt.wheelDelta / 40;
+    if (wheelData > 0) {
+        bmask = 1 << 3;
+    } else {
+        bmask = 1 << 4;
+    }
+    //Util.Debug('mouse scroll by ' + wheelData + ':' + pos.x + "," + pos.y);
+    if (conf.onMouseButton) {
+        conf.onMouseButton(pos.x, pos.y, 1, bmask);
+        conf.onMouseButton(pos.x, pos.y, 0, bmask);
+    }
+    Util.stopEvent(e);
+    return false;
+}
+
+function onMouseMove(e) {
+    var evt, pos;
+    if (! conf.focused) {
+        return true;
+    }
+    evt = (e ? e : window.event);
+    pos = Util.getEventPosition(e, conf.target, conf.scale);
+    //Util.Debug('mouse ' + evt.which + '/' + evt.button + ' up:' + pos.x + "," + pos.y);
+    if (conf.onMouseMove) {
+        conf.onMouseMove(pos.x, pos.y);
+    }
+    Util.stopEvent(e);
+    return false;
+}
+
+function onMouseDisable(e) {
+    var evt, pos;
+    if (! conf.focused) {
+        return true;
+    }
+    evt = (e ? e : window.event);
+    pos = Util.getEventPosition(e, conf.target, conf.scale);
+    /* Stop propagation if inside canvas area */
+    if ((pos.x >= 0) && (pos.y >= 0) &&
+        (pos.x < conf.target.offsetWidth) &&
+        (pos.y < conf.target.offsetHeight)) {
+        //Util.Debug("mouse event disabled");
+        Util.stopEvent(e);
+        return false;
+    }
+    //Util.Debug("mouse event not disabled");
+    return true;
+}
+
+//
+// Public API interface functions
+//
+
+that.grab = function() {
+    //Util.Debug(">> Mouse.grab");
+    var c = conf.target;
+
+    if ('ontouchstart' in document.documentElement) {
+        Util.addEvent(c, 'touchstart', onMouseDown);
+        Util.addEvent(c, 'touchend', onMouseUp);
+        Util.addEvent(c, 'touchmove', onMouseMove);
+    } else {
+        Util.addEvent(c, 'mousedown', onMouseDown);
+        Util.addEvent(c, 'mouseup', onMouseUp);
+        Util.addEvent(c, 'mousemove', onMouseMove);
+        Util.addEvent(c, (Util.Engine.gecko) ? 'DOMMouseScroll' : 'mousewheel',
+                onMouseWheel);
+    }
+
+    /* Work around right and middle click browser behaviors */
+    Util.addEvent(document, 'click', onMouseDisable);
+    Util.addEvent(document.body, 'contextmenu', onMouseDisable);
+
+    //Util.Debug("<< Mouse.grab");
+};
+
+that.ungrab = function() {
+    //Util.Debug(">> Mouse.ungrab");
+    var c = conf.target;
+
+    if ('ontouchstart' in document.documentElement) {
+        Util.removeEvent(c, 'touchstart', onMouseDown);
+        Util.removeEvent(c, 'touchend', onMouseUp);
+        Util.removeEvent(c, 'touchmove', onMouseMove);
+    } else {
+        Util.removeEvent(c, 'mousedown', onMouseDown);
+        Util.removeEvent(c, 'mouseup', onMouseUp);
+        Util.removeEvent(c, 'mousemove', onMouseMove);
+        Util.removeEvent(c, (Util.Engine.gecko) ? 'DOMMouseScroll' : 'mousewheel',
+                onMouseWheel);
+    }
+
+    /* Work around right and middle click browser behaviors */
+    Util.removeEvent(document, 'click', onMouseDisable);
+    Util.removeEvent(document.body, 'contextmenu', onMouseDisable);
+
+    //Util.Debug(">> Mouse.ungrab");
+};
+
+return that;  // Return the public API interface
+
+}  // End of Mouse()
+

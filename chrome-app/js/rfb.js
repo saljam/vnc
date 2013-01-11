@@ -201,14 +201,14 @@ function constructor() {
     }
     // Initialize display, mouse, keyboard, and websock
     try {
-        display   = new Display({'target': conf.target});
+        display   = VNC.Display({'target': conf.target});
     } catch (exc) {
         console.error("Display exception: " + exc);
         updateState('fatal', "No working Display");
     }
-    keyboard = new Keyboard({'target': conf.focusContainer,
+    keyboard = VNC.Keyboard({'target': conf.focusContainer,
                                 'onKeyPress': keyPress});
-    mouse    = new Mouse({'target': conf.target,
+    mouse    = VNC.Mouse({'target': conf.target,
                             'onMouseButton': mouseButton,
                             'onMouseMove': mouseMove});
 

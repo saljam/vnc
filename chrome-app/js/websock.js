@@ -1,7 +1,4 @@
-var VNC;
-if (VNC === undefined) {
-	VNC = {};
-}
+var VNC = VNC || {};
 
 VNC.socket = function(eventHandlers) {
 	var sock = null, // WebSocket object
@@ -147,18 +144,19 @@ VNC.socket = function(eventHandlers) {
 			}
 		}
 	}
-	
+
 	function connect(host, port) {
-	        sock = new TcpClient(host, parseInt(port));
+	        sock = VNC.tcpClient(host, parseInt(port), {
+			receive: recv_message
+		});
 		sock.connect(function() {
 			eventHandlers.open();
 		});
-		sock.addResponseListener(recv_message);
 	}
-	
+
 	function close() {
 	}
-	
+
 	return {
 		// Direct access to send and receive queues
 		get_rQ:	get_rQ,

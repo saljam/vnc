@@ -9,10 +9,7 @@
  * (c) 2012 Michael Tinglof, Joe Balaz, Les Piech (Mercuri.ca)
  */
  
-var VNC;
-if (VNC === undefined) {
-	VNC = {};
-}
+var VNC = VNC || {};
 
 VNC.rfb = function(defaults) {
 "use strict";

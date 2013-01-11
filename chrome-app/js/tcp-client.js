@@ -38,7 +38,7 @@ VNC.tcpClient = function(host, port, callbacks, pollInterval) {
 				socket.connect(socketId, host, port, function(resultCode) {
 					// Start polling for reads.
 					client.isConnected = true;
-					setTimeout(periodicallyRead, client.pollInterval);
+ 					socket.read(socketId, null, onDataRead);
 
 					if (callback) {
 						callback();
@@ -75,32 +75,22 @@ VNC.tcpClient = function(host, port, callbacks, pollInterval) {
 		}
 	};
 
-	// Checks for new data to read from the socket
-	var periodicallyRead = function() {
-		socket.getInfo(socketId, function (info) {
-			if (info.connected) {
-				setTimeout(periodicallyRead, client.pollInterval);
- 				socket.read(socketId, null, onDataRead);
-			} else if (client.isConnected) {
-				client.disconnect();
-			}
-		});
-	};
-
 	// Callback function for when data has been read from the socket.
 	// Converts the array buffer that is read in to a string
 	// and sends it on for further processing by passing it to
 	// the previously assigned callback function.
-	var onDataRead = function(readInfo) {
+	var onDataRead = function(info) {
 		// Call received callback if there's data in the response.
-		if (readInfo.resultCode > 0) {
+		if (info.resultCode > 0) {
 			if (callbacks.receive) {
 				// Return raw ArrayBuffer directly.
-				callbacks.receive(readInfo.data);
+				callbacks.receive(info.data);
 			}
 
 			// Trigger another read right away
-			setTimeout(periodicallyRead, 0);
+ 			socket.read(socketId, null, onDataRead);
+		} else if (client.isConnected) {
+			client.disconnect();
 		}
 	};
 

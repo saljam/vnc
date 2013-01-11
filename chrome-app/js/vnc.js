@@ -17,25 +17,6 @@ $(function () {
 		}
 	}
 
-	var dial = function(host, port) {
-		var password;
-
-		document.title = host;
-
-		pwd = "";
-
-		rfb = VNC.rfb({
-			target: $('#screen')[0],
-			local_cursor: true,
-			check_rate: 15,
-			updateState: updateState,
-			onPasswordRequired: function() {
-				$("#form-pwd").slideDown();
-			}
-		});
-		rfb.connect(host, port, pwd, '');
-	}
-
 	$("#form-pwd").hide().submit(function(){
 		rfb.sendPassword(password.value);
 		$("#form-pwd").slideUp();
@@ -47,8 +28,19 @@ $(function () {
 		chrome.storage.local.set({"last_conn": {
 			"host": host.value,
 			"port": port.value }});
-		dial(host.value, port.value);
-		return false;
+			document.title = host;
+
+			rfb = VNC.rfb({
+				target: $('#screen')[0],
+				local_cursor: true,
+				check_rate: 15,
+				updateState: updateState,
+				onPasswordRequired: function() {
+					$("#form-pwd").slideDown();
+				}
+			});
+			rfb.connect(host.value, port.value);
+			return false;
 	});
 	chrome.storage.local.get("last_conn", function(data) {
 		host.value = data.last_conn.host;

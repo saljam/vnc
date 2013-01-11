@@ -359,11 +359,10 @@ updateState = function(state, statusMsg) {
     }
 
     if ((state === 'failed') || (state === 'fatal')) {
-        func = console.error;
+        func = console.error.bind(console);
     } else {
-        func = console.log;
+        func = console.log.bind(console);
     }
-
     func('State: ' + state + (typeof(statusMsg) !== 'undefined' ? " Msg: " + statusMsg : ""));
 
     if ((oldstate === 'failed') && (state === 'disconnected')) {

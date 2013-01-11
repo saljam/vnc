@@ -178,7 +178,7 @@ that.set_local_cursor = function(cursor) {
         if (display.get_cursor_uri()) {
             conf.local_cursor = true;
         } else {
-            Util.Warn("Browser does not support local cursor");
+            console.warn("Browser does not support local cursor");
         }
     }
 };
@@ -203,7 +203,7 @@ function constructor() {
     try {
         display   = new Display({'target': conf.target});
     } catch (exc) {
-        Util.Error("Display exception: " + exc);
+        console.error("Display exception: " + exc);
         updateState('fatal', "No working Display");
     }
     keyboard = new Keyboard({'target': conf.focusContainer,
@@ -222,7 +222,6 @@ function constructor() {
 			}
 		},
 		close: function(e) {
-			Util.Warn("WebSocket on-close event");
 			var msg = "";
 			if (e.code) {
 				msg = " (code: " + e.code;
@@ -236,13 +235,13 @@ function constructor() {
 			} else if (rfb_state === 'ProtocolVersion') {
 				fail('Failed to connect to server' + msg);
 			} else if (rfb_state in {'failed':1, 'disconnected':1}) {
-				Util.Error("Received onclose while disconnected" + msg);
+				console.error("Received onclose while disconnected" + msg);
 			} else  {
 				fail('Server disconnected' + msg);
 			}
 		},
 		error: function(e) {
-			Util.Warn("WebSocket on-error event");
+			console.warn("WebSocket on-error event");
 		}
 	});
 
@@ -356,13 +355,13 @@ updateState = function(state, statusMsg) {
     }
 
     if (oldstate === 'fatal') {
-        Util.Error("Fatal error, cannot continue");
+        console.error("Fatal error, cannot continue");
     }
 
     if ((state === 'failed') || (state === 'fatal')) {
-        func = Util.Error;
+        func = console.error;
     } else {
-        func = Util.Warn;
+        func = console.log;
     }
 
     func('State: ' + state + (typeof(statusMsg) !== 'undefined' ? " Msg: " + statusMsg : ""));
@@ -389,7 +388,7 @@ updateState = function(state, statusMsg) {
     switch (state) {
     case 'normal':
         if ((oldstate === 'disconnected') || (oldstate === 'failed')) {
-            Util.Error("Invalid transition from 'disconnected' or 'failed' to 'normal'");
+            console.error("Invalid transition from 'disconnected' or 'failed' to 'normal'");
         }
 
         break;
@@ -423,13 +422,13 @@ updateState = function(state, statusMsg) {
 
     case 'failed':
         if (oldstate === 'disconnected') {
-            Util.Error("Invalid transition from 'disconnected' to 'failed'");
+            console.error("Invalid transition from 'disconnected' to 'failed'");
         }
         if (oldstate === 'normal') {
-            Util.Error("Error while connected.");
+            console.error("Error while connected.");
         }
         if (oldstate === 'init') {
-            Util.Error("Error while initializing.");
+            console.error("Error while initializing.");
         }
 
         // Make sure we transition to disconnected
@@ -462,13 +461,13 @@ handle_message = function() {
     //Util.Debug(">> handle_message ws.rQlen(): " + ws.rQlen());
     //Util.Debug("ws.rQslice(0,20): " + ws.rQslice(0,20) + " (" + ws.rQlen() + ")");
     if (ws.rQlen() === 0) {
-        Util.Warn("handle_message called on empty receive queue");
+        console.warn("handle_message called on empty receive queue");
         return;
     }
     switch (rfb_state) {
     case 'disconnected':
     case 'failed':
-        Util.Error("Got data while disconnected");
+        console.error("Got data while disconnected");
         break;
     case 'normal':
         if (normal_msg() && ws.rQlen() > 0) {
@@ -772,13 +771,13 @@ init_msg = function() {
                   ", blue_shift: " + blue_shift);
 
         if (big_endian !== 0) {
-            Util.Warn("Server native endian is not little endian");
+             console.warn("Server native endian is not little endian");
         }
         if (red_shift !== 16) {
-            Util.Warn("Server native red-shift is not 16");
+            console.warn("Server native red-shift is not 16");
         }
         if (blue_shift !== 0) {
-            Util.Warn("Server native blue-shift is not 0");
+            console.warn("Server native blue-shift is not 0");
         }
 
         /* Connection name/title */
@@ -787,7 +786,7 @@ init_msg = function() {
         
         if (conf.true_color && fb_name === "Intel(r) AMT KVM")
         {
-            Util.Warn("Intel AMT KVM only support 8/16 bit depths. Disabling true color");
+            console.warn("Intel AMT KVM only support 8/16 bit depths. Disabling true color");
             conf.true_color = false;
         }
 
@@ -1263,7 +1262,7 @@ function display_tight(isTightPNG) {
         }
         var uncompressed = FBU.zlibs[streamId].uncompress(data, 0);
         if (uncompressed.status !== 0) {
-            Util.Error("Invalid data in zlib stream");
+            console.error("Invalid data in zlib stream");
         }
         //Util.Warn("Decompressed " + data.length + " to " +
         //    uncompressed.data.length + " checksums " +
@@ -1532,11 +1531,11 @@ encHandlers.Cursor = function set_cursor() {
 };
 
 encHandlers.JPEG_quality_lo = function set_jpeg_quality() {
-    Util.Error("Server sent jpeg_quality pseudo-encoding");
+    console.error("Server sent jpeg_quality pseudo-encoding");
 };
 
 encHandlers.compress_lo = function set_compress_level() {
-    Util.Error("Server sent compress level pseudo-encoding");
+    console.error("Server sent compress level pseudo-encoding");
 };
 
 /*
@@ -1582,7 +1581,7 @@ clientEncodings = function() {
         // TODO: remove this when we have tight+non-true-color
         } else if ((encodings[i][0] === "TIGHT") && 
                    (! conf.true_color)) {
-            Util.Warn("Skipping tight, only support with true color");
+            console.warn("Skipping tight, only support with true color");
         } else {
             //Util.Debug("Adding encoding: " + encodings[i][0]);
             encList.push(encodings[i][1]);

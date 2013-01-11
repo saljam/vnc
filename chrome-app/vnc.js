@@ -39,6 +39,7 @@ $(function () {
 		rfb.sendPassword(password.value);
 		$("#form-pwd").slideUp();
 		$("#form-pwd")[0].reset();
+		return false;
 	});
 	$("#form-connect").submit(function() {
 		$(this).slideUp();
@@ -46,6 +47,7 @@ $(function () {
 			"host": host.value,
 			"port": port.value }});
 		dial(host.value, port.value);
+		return false;
 	});
 	chrome.storage.local.get("last_conn", function(data) {
 		host.value = data.last_conn.host;

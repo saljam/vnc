@@ -74,7 +74,6 @@ var that           = {},  // Public API methods
     display        = null,   // Display object
     keyboard       = null,   // Keyboard input handler object
     mouse          = null,   // Mouse input handler object
-    sendTimer      = null,   // Send Queue check timer
     connTimer      = null,   // connection timer
     disconnTimer   = null,   // disconnection timer
     msgTimer       = null,   // queued handle_message timer
@@ -338,10 +337,6 @@ updateState = function(state, statusMsg) {
      */
     if (state in {'disconnected':1, 'loaded':1, 'connect':1,
                   'disconnect':1, 'failed':1, 'fatal':1}) {
-        if (sendTimer) {
-            clearInterval(sendTimer);
-            sendTimer = null;
-        }
 
         if (msgTimer) {
             clearInterval(msgTimer);
@@ -501,7 +496,6 @@ handle_message = function() {
 
 function flushClient() {
     if (mouse_arr.length > 0) {
-        //send(mouse_arr.concat(fbUpdateRequests()));
         ws.send(mouse_arr);
         setTimeout(function() {
                 ws.send(fbUpdateRequests());
@@ -635,15 +629,6 @@ init_msg = function() {
         }
         if (rfb_version > rfb_max_version) { 
             rfb_version = rfb_max_version;
-        }
-
-        if (! test_mode) {
-            sendTimer = setInterval(function() {
-                    // Send updates either at a rate of one update
-                    // every 50ms, or whatever slower rate the network
-                    // can handle.
-                    ws.flush();
-                }, 50);
         }
 
         cversion = "00" + parseInt(rfb_version,10) +

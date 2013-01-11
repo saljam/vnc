@@ -5,11 +5,9 @@ if (VNC === undefined) {
 
 VNC.socket = function(eventHandlers) {
 	var sock = null, // WebSocket object
-		mode = 'base64',  // Current WebSocket mode: 'binary', 'base64'
 		rQ = [],          // Receive queue
 		rQi = 0,          // Receive queue index
-		rQmax = 10000,    // Max receive queue size before compacting
-		sQ = [];          // Send queue
+		rQmax = 10000;    // Max receive queue size before compacting
 
 		for (handler in ['message', 'open', 'close', 'error']) {
 			if (eventHandlers[handler] === undefined) {
@@ -18,10 +16,6 @@ VNC.socket = function(eventHandlers) {
 		}
 
 	// Queue public functions
-
-	function get_sQ() {
-		return sQ;
-	}
 
 	function get_rQ() {
 		return rQ;
@@ -38,10 +32,10 @@ VNC.socket = function(eventHandlers) {
 	}
 
 	function rQpeek8() {
-		return (rQ[rQi]      );
+		return (rQ[rQi]);
 	}
 	function rQshift8() {
-		return (rQ[rQi++]      );
+		return (rQ[rQi++]);
 	}
 	function rQunshift8(num) {
 		if (rQi === 0) {
@@ -98,10 +92,6 @@ VNC.socket = function(eventHandlers) {
 		return false;
 	}
 
-	function encode_message() {
-		return ().buffer;
-	}
-
 	function decode_message(data) {
 		// push arraybuffer values onto the end
 		var u8 = new Uint8Array(data);
@@ -110,17 +100,8 @@ VNC.socket = function(eventHandlers) {
 		}
 	}
 
-	function flush() {
-		if (sQ.length > 0) {
-			sock.sendBuffer(new Uint8Array(sQ));
-			sQ = [];
-		}
-		return true;
-	}
-
 	function send(arr) {
-		sQ = sQ.concat(arr);
-		return flush();
+		sock.sendBuffer(new Uint8Array(arr));
 	}
 
 	var stringToArrayBuffer = function(str, callback) {
@@ -133,10 +114,9 @@ VNC.socket = function(eventHandlers) {
 	};
 
 	var sendString = function(str) {
-		//stringToArrayBuffer(str, function(buf) {
-		//	send(buf);
-		//});
-		send(str.split('').map(function(c){return c.charCodeAt(0)}));
+		stringToArrayBuffer(str, function(buf) {
+			sock.sendBuffer(buf);
+		});
 	}
 
 	function recv_message(e) {
@@ -171,12 +151,8 @@ VNC.socket = function(eventHandlers) {
 	function connect(host, port) {
 	        sock = new TcpClient(host, parseInt(port));
 		sock.connect(function() {
-			Util.Debug(">> WebSock.onopen");
-			mode = 'binary';
 			eventHandlers.open();
-			Util.Debug("<< WebSock.onopen");
 		});
-	
 		sock.addResponseListener(recv_message);
 	}
 	
@@ -184,11 +160,7 @@ VNC.socket = function(eventHandlers) {
 	}
 	
 	return {
-		// Configuration settings
-		maxBufferedAmount:	200,
-		
 		// Direct access to send and receive queues
-		get_sQ:	get_sQ,
 		get_rQ:	get_rQ,
 		get_rQi:	get_rQi,
 		set_rQi:	set_rQi,
@@ -205,7 +177,6 @@ VNC.socket = function(eventHandlers) {
 		rQslice:	rQslice,
 		rQwait:	rQwait,
 		
-		flush:	flush,
 		send:	send,
 		sendString:	sendString,
 		

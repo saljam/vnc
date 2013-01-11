@@ -1,3 +1,6 @@
-This is a VNC client Chrome app. It's still a work in progress.
+This is a VNC viewer Chrome app. It uses Chrome's sockets API to talk to the VNC server directly.
 
-This project uses NoVNC for the RFB rendering, and jQuery for the UI.
+The RFB rendering is based on NoVNC[0]. The icon is based on "Computer" from the Noun Project[1].
+
+[0] http://kanaka.github.com/noVNC/
+[1] http://thenounproject.com/noun/computer/#icon-No115
